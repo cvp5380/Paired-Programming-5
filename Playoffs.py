@@ -1,10 +1,35 @@
 from selenium import webdriver
+import unittest
+
+class NewVisitorTest(unittest.TestCase):  
+
+    def setUp(self):  
+        self.browser = webdriver.Firefox()
+
+    def tearDown(self):  
+        self.browser.quit()
+
+    def test_can_start_a_list_and_retrieve_it_later(self):  
+        # Chris & Ciera has heard about a cool new online to-do app. They go
+        # to check out its homepage
+        self.browser.get('http://localhost:8000')
+
+        # They notice the page title and header mention to-do lists
+        self.assertIn('To-Do', self.browser.title)  
+        self.fail('Finish the test!')  
+
+        # They're invited to enter a to-do item straight away
+        [...rest of comments as before]
+
+if __name__ == '__main__':  
+    unittest.main(warnings='ignore')  
 
 browser = webdriver.Firefox()
 
 # Chris & Ciera have heard about a cool new online playoff app. She goes
 # to check out its homepage
-browser.get('http://localhost:8000')
+
+assert 'Django' in browser.title
 
 # They notice the page title and header mention playoff teams assert 'Playoff Teams' in browser.title
 
