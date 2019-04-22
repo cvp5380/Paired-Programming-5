@@ -1,55 +1,153 @@
+from django.test import LiveServerTestCase
+
 from selenium import webdriver
-import unittest
 
-class NewVisitorTest(unittest.TestCase):  
+from selenium.common.exceptions import WebDriverException
 
-    def setUp(self):  
+from selenium.webdriver.common.keys import Keys
+
+import time
+
+
+
+MAX_WAIT = 10
+
+
+
+
+
+class NewVisitorTest(LiveServerTestCase):
+
+
+
+    def setUp(self):
+
         self.browser = webdriver.Firefox()
 
-    def tearDown(self):  
+
+
+    def tearDown(self):
+
         self.browser.quit()
 
-    def test_can_start_a_list_and_retrieve_it_later(self):  
-        # Chris & Ciera has heard about a cool new online to-do app. They go
+
+
+
+
+    def wait_for_row_in_list_table(self, row_text):
+
+        start_time = time.time()
+
+        while True:
+
+            try:
+
+                table = self.browser.find_element_by_id('id_list_table')
+
+                rows = table.find_elements_by_tag_name('tr')
+
+                self.assertIn(row_text, [row.text for row in rows])
+
+                return
+
+            except (AssertionError, WebDriverException) as e:
+
+                if time.time() - start_time > MAX_WAIT:
+
+                    raise e
+
+                time.sleep(0.5)
+
+
+
+
+
+    def test_can_start_a_list_and_retrieve_it_later(self):
+
+        # Edith has heard about a cool new online to-do app. She goes
+
         # to check out its homepage
-        self.browser.get('http://localhost:8000')
 
-        # They notice the page title and header mention to-do lists
-        self.assertIn('To-Do', self.browser.title)  
-        self.fail('Finish the test!')  
+        self.browser.get(self.live_server_url)
 
-        # They're invited to enter a to-do item straight away
-        [...rest of comments as before]
 
-if __name__ == '__main__':  
-    unittest.main(warnings='ignore')  
 
-browser = webdriver.Firefox()
+        # She notices the page title and header mention to-do lists
 
-# Chris & Ciera have heard about a cool new online playoff app. She goes
-# to check out its homepage
+        self.assertIn('To-Do', self.browser.title)
 
-assert 'Django' in browser.title
+        header_text = self.browser.find_element_by_tag_name('h1').text
 
-# They notice the page title and header mention playoff teams assert 'Playoff Teams' in browser.title
+        self.assertIn('To-Do', header_text)
 
-# They were invited to enter a basketball matchup straight away
 
-# They type "Milwaukee Bucks vs Detriot Pistons" into a text box 
-# When they hit enter, the page updates, and now the page lists
-# "1: "Milwaukee Bucks vs Detriot Pistons" as an item in a list
 
-# There is still a text box inviting them to add another item. They
-# enter "Boston Celtics vs Indiana Pacers "
+        # She is invited to enter a to-do item straight away
 
-# The page updates again, and now shows both items on their list
+        inputbox = self.browser.find_element_by_id('id_new_item')
 
-# They wonder whether the site will remember their list. Then they see
-# that the site has generated a unique URL for them -- there is some
-# explanatory text to that effect.
+        self.assertEqual(
 
-# They visits that URL - their playoff list is still there.
+            inputbox.get_attribute('placeholder'),
 
-# Satisfied, they go back to sleep
+            'Enter a to-do item'
 
-browser.quit()
+        )
+
+
+
+        # She types "Buy peacock feathers" into a text box (Edith's hobby
+
+        # is tying fly-fishing lures)
+
+        inputbox.send_keys('Buy peacock feathers')
+
+
+
+        # When she hits enter, the page updates, and now the page lists
+
+        # "1: Buy peacock feathers" as an item in a to-do list table
+
+        inputbox.send_keys(Keys.ENTER)
+
+        self.wait_for_row_in_list_table('1: Buy peacock feathers')
+
+
+
+        # There is still a text box inviting her to add another item. She
+
+        # enters "Use peacock feathers to make a fly" (Edith is very
+
+        # methodical)
+
+        inputbox = self.browser.find_element_by_id('id_new_item')
+
+        inputbox.send_keys('Use peacock feathers to make a fly')
+
+        inputbox.send_keys(Keys.ENTER)
+
+
+
+        # The page updates again, and now shows both items on her list
+
+        self.wait_for_row_in_list_table('2: Use peacock feathers to make a fly')
+
+        self.wait_for_row_in_list_table('1: Buy peacock feathers')
+
+
+
+        # Edith wonders whether the site will remember her list. Then she sees
+
+        # that the site has generated a unique URL for her -- there is some
+
+        # explanatory text to that effect.
+
+        self.fail('Finish the test!')
+
+
+
+        # She visits that URL - her to-do list is still there.
+
+
+
+        # Satisfied, she goes back to sleep
